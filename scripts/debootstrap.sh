@@ -1,7 +1,8 @@
 #!/bin/sh -e
 
 CHROOT=${CHROOT=$(pwd)/rootfs}
-RELEASE=${RELEASE=stable}
+# 固定 Debian 13（trixie）；用 stable 也行，但换 release 时镜像会悄悄变
+RELEASE=${RELEASE=trixie}
 HOST_NAME=${HOST_NAME=openstick-debian}
 
 rm -rf ${CHROOT}
@@ -54,8 +55,8 @@ cat << EOF > ${CHROOT}/etc/udev/rules.d/99-nm-usb0.rules
 SUBSYSTEM=="net", ACTION=="add|change|move", ENV{DEVTYPE}=="gadget", ENV{NM_UNMANAGED}="0"
 EOF
 
-# install kernel
-wget -O - http://mirror.postmarketos.org/postmarketos/v24.06/aarch64/linux-postmarketos-qcom-msm8916-6.6-r5.apk \
+# install kernel（python3.13 的 ssl 在 Actions 上握手更稳，改 https）
+wget -O - https://mirror.postmarketos.org/postmarketos/v24.06/aarch64/linux-postmarketos-qcom-msm8916-6.6-r5.apk \
     | tar xkzf - -C ${CHROOT} --exclude=.PKGINFO --exclude=.SIGN* 2>/dev/null
 
 mkdir -p ${CHROOT}/boot/extlinux
@@ -68,7 +69,8 @@ cp dtbs/* ${CHROOT}/boot/dtbs/qcom
 mkdir -p ${CHROOT}/lib/firmware/msm-firmware-loader
 
 # update fstab
-echo "PARTUUID=80780b1d-0fe1-27d3-23e4-9244e62f8c46\t/boot\text2\tdefaults\t0 2" > ${CHROOT}/etc/fstab
+# 本机 stock GPT 里 boot 分区（16MB, ext2）的 PARTUUID
+echo "PARTUUID=ee8de777-10d5-9d19-572a-18e0f3c3de69\t/boot\text2\tdefaults\t0 2" > ${CHROOT}/etc/fstab
 
 # backup rootfs
 tar cpzf rootfs.tgz --exclude="usr/bin/qemu-aarch64-static" -C rootfs .
