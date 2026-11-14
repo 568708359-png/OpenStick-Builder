@@ -10,8 +10,7 @@ echo "locales locales/locales_to_be_generated multiselect en_US.UTF-8 UTF-8" | d
 rm -f "/etc/locale.gen"
 
 apt update -qqy
-apt upgrade -qqy
-apt autoremove -qqy
+# 跳过 apt upgrade：trixie 基础包本身很新，qemu 模拟下这一步能白烧十几分钟
 apt install -qqy --no-install-recommends \
     bridge-utils \
     dnsmasq \
