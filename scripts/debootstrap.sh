@@ -7,12 +7,21 @@ HOST_NAME=${HOST_NAME=openstick-debian}
 
 rm -rf ${CHROOT}
 
-debootstrap --foreign --arch arm64 \
+debootstrap --foreign --variant=minbase --arch arm64 \
     --keyring /usr/share/keyrings/debian-archive-keyring.gpg ${RELEASE} ${CHROOT}
 
 cp $(which qemu-aarch64-static) ${CHROOT}/usr/bin
 
 chroot ${CHROOT} qemu-aarch64-static /bin/bash /debootstrap/debootstrap --second-stage
+
+# chroot 里没有 systemd(PID 1)，必须拦住 service 启动，
+# 否则 postinst 里的 invoke-rc.d 会一直等 dbus，表现就是卡死几十分钟
+cat << 'EOF' > ${CHROOT}/usr/sbin/policy-rc.d
+#!/bin/sh
+exit 101
+EOF
+chmod +x ${CHROOT}/usr/sbin/policy-rc.d
+export RUNLEVEL=1
 
 cat << EOF > ${CHROOT}/etc/apt/sources.list
 deb http://deb.debian.org/debian ${RELEASE} main contrib non-free-firmware
