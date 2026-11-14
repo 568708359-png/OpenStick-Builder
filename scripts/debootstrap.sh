@@ -60,6 +60,7 @@ chmod 0600 ${CHROOT}/etc/NetworkManager/system-connections/*
 sed -i '/\[main\]/a dns=dnsmasq' ${CHROOT}/etc/NetworkManager/NetworkManager.conf
 
 # enable autoconnect for usb0
+mkdir -p ${CHROOT}/etc/udev/rules.d
 cat << EOF > ${CHROOT}/etc/udev/rules.d/99-nm-usb0.rules
 SUBSYSTEM=="net", ACTION=="add|change|move", ENV{DEVTYPE}=="gadget", ENV{NM_UNMANAGED}="0"
 EOF
